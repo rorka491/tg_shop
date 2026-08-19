@@ -16,8 +16,6 @@ class Settings(BaseSettings):
 
     upload_dir: Path = base_dir / "uploads" / "preview"
 
-    service_password: str
-
     debug: bool = True
 
     telegram_token: str
