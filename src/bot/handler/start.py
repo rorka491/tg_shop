@@ -50,7 +50,10 @@ async def check_service_password(
     user_repo: FromDishka[UserRepository],
     service_password_repo: FromDishka[ServicePasswordRepository]
 ):
-    password = await service_password_repo.get()
+    password = await service_password_repo.get() 
+    if not password:
+        password = await service_password_repo.refresh()
+
     if message.text != password:
         await message.answer(
             "❌ Неверный пароль.\n"

@@ -5,12 +5,12 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
+
 COPY docker.requirements .
+
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 RUN pip install --no-cache-dir -r docker.requirements
 
 COPY . .
-
-RUN alembic upgrade head
-
-CMD ["python", "-m", "main.py"]

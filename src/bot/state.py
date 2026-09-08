@@ -10,6 +10,7 @@ class AddProductState(StatesGroup):
     name = State()
     description = State()
     price = State()
+    unit = State()
     stock = State()
     preview = State()
 

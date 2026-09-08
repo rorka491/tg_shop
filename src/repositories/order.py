@@ -46,6 +46,7 @@ class OrderRepository(BaseRepository[Order]):
             select(self.model)
             .where(self.model.id == order_id)
             .options(
+                selectinload(self.model.user),
                 selectinload(self.model.products)
                 .selectinload(OrderProduct.product)
             )
@@ -105,5 +106,20 @@ class OrderRepository(BaseRepository[Order]):
                 .selectinload(OrderProduct.product)
             )
         ) 
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
+
+    async def get_all_complete_orders(self,) -> list[Order]:
+        stmt = (
+            select(self.model)
+            .where(
+                self.model.status == OrderStatus.completed
+            )
+            .options(
+                selectinload(self.model.user),
+                selectinload(self.model.products)
+                .selectinload(OrderProduct.product)
+            )
+        )
         result = await self.session.execute(stmt)
         return list(result.scalars().all())

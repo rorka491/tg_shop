@@ -15,8 +15,6 @@ class TelegramUserMiddleware(BaseMiddleware):
         return await handler(event, data)
 
 
-
-
 class PermissionMiddleware(BaseMiddleware):
 
     async def __call__(

@@ -33,9 +33,9 @@ class CallbackAction(StrEnum):
     # order
     SELF_PICKUP = "self_pickup"
     DELIVERY = "delivery"
-    ALL_ORDERS = "all_orders"
+    ALL_COMPLETE_ORDERS = "all_complete_orders"
+    ALL_NOT_COMPLETE_ORDERS = "all_not_complete_orders"
     CONFIRM_ORDER = "confirm_order"
-
 
     # admin
     COMPLETE_ORDER = "complete_order"

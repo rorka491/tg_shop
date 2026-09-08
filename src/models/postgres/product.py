@@ -13,9 +13,23 @@ class Product(Base):
     description: Mapped[str | None] = mapped_column(Text)
     price: Mapped[int] = mapped_column(Integer)
     stock: Mapped[int] = mapped_column(default=0)
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    preview: Mapped[str] = mapped_column(String(255), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        default=True
+    )
+    preview: Mapped[str] = mapped_column(
+        String(255), 
+        nullable=False
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), 
+        server_default=func.now()
+    )
+
+    unit: Mapped[str] = mapped_column(
+        default="л",
+        nullable=False
+    )
 
     is_delete: Mapped[bool] = mapped_column(
         Boolean,

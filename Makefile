@@ -1,2 +1,2 @@
 dev:
-	watchfiles "python3 main.py"
+	watchfiles --ignore-paths uploads "python3 main.py"

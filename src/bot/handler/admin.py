@@ -3,10 +3,9 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 from dishka.integrations.aiogram import FromDishka, inject
-
 from src.repositories.order import OrderRepository
 from src.enums import CallbackAction, OrderStatus
-from src.bot.formaters import admin_formatter, admin_order_formatter, product_formatter
+from src.bot.formaters import admin_formatter, admin_order_formatter, order_formatter, product_formatter
 from src.repositories import ProductRepository, ServicePasswordRepository
 from src.bot.callback_data import AdminCallback, AdminOrderCallback
 from src.models.postgres.user import User
@@ -37,7 +36,7 @@ async def admin(
         password = await service_password_repo.refresh()
 
     await message.answer(
-         **admin_formatter(password).as_kwargs(),
+        **admin_formatter(password).as_kwargs(),
         reply_markup=admin_keyboard(),
     )
 
@@ -92,14 +91,28 @@ async def product_description(
         return
 
     await state.update_data(description=message.text)
+    await state.set_state(AddProductState.unit)
+
+    await message.answer(
+        "Введите единицу измерения товара:"
+    )
+
+
+@router.message(AddProductState.unit)
+async def product_unit(
+    message: Message,
+    state: FSMContext,
+):
+    if not message.text:
+        await message.answer("Введите описание текстом.")
+        return
+    
+    await state.update_data(unit=message.text)
     await state.set_state(AddProductState.price)
 
     await message.answer(
         "Введите цену товара:"
     )
-
-
-
 
 @router.message(AddProductState.price)
 async def product_price(
@@ -149,16 +162,7 @@ async def product_stock(
         "Отправьте фотографию товара:"
     )
 
-# @router.message(AddProductState.preview, F.photo)
-# async def debug_preview(
-#     message: Message,
-#     state: FSMContext
-# ):
-#     print("PREVIEW STATE:", await state.get_state())
-#     print("MESSAGE:", message)
-#     print("PHOTO:", message.photo)
 
-#     await message.answer("Я получил сообщение на preview")
 
 @router.message(AddProductState.preview, F.photo)
 async def product_preview(
@@ -201,7 +205,7 @@ async def product_preview(
         f"✅ <b>Товар создан</b>\n\n"
         f"📦 {product.name}\n"
         f"💰 {product.price} ₽\n"
-        f"📊 Остаток: {product.stock} шт."
+        f"📊 Остаток: {product.stock} {product.unit}."
     )
 
 
@@ -245,6 +249,7 @@ async def change_price_callback(
     )
 
     await callback.answer()
+
 
 @router.message(ChangePrice.waiting_for_price)
 async def change_price(
@@ -347,8 +352,9 @@ async def update_stock(
     await message.answer(
         f"✅ Остаток изменён\n\n"
         f"📦 {product.name}\n"
-        f"Остаток: {product.stock} шт."
+        f"Остаток: {product.stock} {product.unit}."
     )
+
 
 
 @router.callback_query(
@@ -379,7 +385,7 @@ async def toggle_active_product(
 
 
 @router.callback_query(
-    AdminCallback.filter(F.action == CallbackAction.ALL_ORDERS)
+    AdminCallback.filter(F.action == CallbackAction.ALL_NOT_COMPLETE_ORDERS)
 )
 async def get_all_orders(
     callback: CallbackQuery,
@@ -400,6 +406,27 @@ async def get_all_orders(
             reply_markup=admin_order_keyboard(order)
         )
 
+@router.callback_query(
+    AdminCallback.filter(F.action == CallbackAction.ALL_COMPLETE_ORDERS)
+)
+async def get_all_orders(
+    callback: CallbackQuery,
+    order_repo: FromDishka[OrderRepository]
+):
+    orders = await order_repo.get_all_complete_orders()
+    if not orders:
+        await callback.answer(
+            "Заказов пока нет"
+        )
+        return 
+    
+    await callback.message.delete()
+    
+    for order in orders:
+        await callback.message.answer(
+            admin_order_formatter(order),
+        )
+
 
 @router.callback_query(
     AdminOrderCallback.filter(F.action == CallbackAction.COMPLETE_ORDER)
@@ -408,12 +435,20 @@ async def get_all_orders(
 async def complete_order(
     callback: CallbackQuery,
     callback_data: AdminOrderCallback,
+    bot: FromDishka[Bot],
     order_repo: FromDishka[OrderRepository],
 ): 
     order = await order_repo.get_by_id(callback_data.order_id)
     if not order:
         return 
-    
+    await bot.send_message(
+        chat_id=order.user.telegram_id,
+        text="Ваш заказ доставлен"
+    )
+    await bot.send_message(
+        chat_id=order.user.telegram_id,
+        text=order_formatter(order).as_html()
+    )
     order.status = OrderStatus.completed
     for item in order.products:
         item.product.stock -= item.quantity
@@ -428,9 +463,20 @@ async def complete_order(
 async def cancel_order(
     callback: CallbackQuery,
     callback_data: AdminOrderCallback,
+    bot: FromDishka[Bot],
     order_repo: FromDishka[OrderRepository]
 ): 
     order = await order_repo.get_by_id(callback_data.order_id)
+    if not order:
+        return 
+    await bot.send_message(
+        chat_id=order.user.telegram_id,
+        text="Ваш заказ отменен"
+    )
+    await bot.send_message(
+        chat_id=order.user.telegram_id,
+        text=order_formatter(order).as_html()
+    )
     order.status = OrderStatus.cancelled
     await order_repo.save(order)
     await callback.message.delete()

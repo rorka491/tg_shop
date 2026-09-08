@@ -129,19 +129,25 @@ def admin_keyboard() -> InlineKeyboardMarkup:
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text="Заказы",
-                    callback_data=AdminCallback(action=CallbackAction.ALL_ORDERS).pack(),
+                    text="Завершенные заказы",
+                    callback_data=AdminCallback(action=CallbackAction.ALL_COMPLETE_ORDERS).pack(),
                 ),
             ],
             [
                 InlineKeyboardButton(
-                    text="📦 Номенклатура",
+                    text="Незавершенные заказы",
+                    callback_data=AdminCallback(action=CallbackAction.ALL_NOT_COMPLETE_ORDERS).pack(),
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="Номенклатура",
                     callback_data=AdminCallback(action=CallbackAction.NOMENCLATURE).pack(),
                 ),
             ],
             [
                 InlineKeyboardButton(
-                    text="➕ Добавить товар",
+                    text="Добавить товар",
                     callback_data=AdminCallback(action=CallbackAction.ADD).pack(),
                 ),
             ],

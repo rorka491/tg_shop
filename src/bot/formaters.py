@@ -11,7 +11,7 @@ def product_formatter(product: Product) -> str:
     return (
             f"{product.name}\n"
             f"💰 {product.price} ₽\n\n"
-             f"📦 В наличии: {product.stock} л.\n\n"
+            f"📦 В наличии: {product.stock} {product.unit}.\n\n"
             f"{product.description or ''}"
         )
 
@@ -42,12 +42,11 @@ def order_formatter(order: Order) -> Text:
             Text(
                 Bold(f"{index}. {item.product.name}"),
                 "\n",
-                f"   {item.quantity} шт. × {item.price:.0f} ₽ = ",
+                f"   {item.quantity} {item.product.unit}. × {item.price:.0f} ₽ = ",
                 Bold(f"{total:.0f} ₽"),
             )
         )
 
-    # Собираем финальный текст через as_list
     return as_list(
         Text("🛒 ", Bold("Ваша корзина")),
         "",          
@@ -141,7 +140,7 @@ def admin_order_formatter(order: Order) -> str:
         lines.extend([
             f"<b>{index}. {escape(item.product.name)}</b>",
             (
-                f"   {item.quantity} шт. × "
+                f"   {item.quantity} {item.product.unit}. × "
                 f"{item.price:.0f} ₽ = "
                 f"<b>{total:.0f} ₽</b>"
             ),

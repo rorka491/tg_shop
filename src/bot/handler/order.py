@@ -1,5 +1,4 @@
 from datetime import datetime
-from tkinter import W
 
 from aiogram import F, Bot, Router
 from aiogram.types import CallbackQuery, Message, ReplyKeyboardRemove
